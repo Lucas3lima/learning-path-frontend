@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { useSignIn } from "@/pages/_auth/-components/hooks/use-login"
+import { useSignIn } from "@/pages/_auth/-components/hooks/useSignIn"
 import { Link } from "@tanstack/react-router"
 import { ArrowRight } from "lucide-react"
 import { useState } from "react"
