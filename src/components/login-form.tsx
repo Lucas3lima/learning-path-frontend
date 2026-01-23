@@ -13,32 +13,55 @@ import {
   FieldLabel
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { useSignIn } from "@/hooks/auth/useSignIn"
 import { cn } from "@/lib/utils"
-import { useSignIn } from "@/pages/_auth/-components/hooks/useSignIn"
-import { Link } from "@tanstack/react-router"
+import { signInSchema, type SignInSchema } from "@/schemas/sign-in-schema"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { ArrowRight } from "lucide-react"
-import { useState } from "react"
+import { useEffect } from "react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
 
-  const { mutate, data, isPending, error } = useSignIn()
+  const { mutate, isPending, error, isSuccess  } = useSignIn()
+  const navigate = useNavigate()
 
-  const [email,setEmail] = useState("")
-  const [password,setPassword] = useState("")
+  useEffect(() => {
+    if (error) {
+      toast.error((error as Error).message, { position: 'top-center'})
+    } 
+    
+    if(isSuccess){
+      navigate({to: '/'})
+    }
+    
+  }, [error,  isSuccess, navigate])
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
 
-    mutate({ email, password })
+
+  const {
+    register,
+    handleSubmit,
+  } = useForm<SignInSchema>({
+    resolver: zodResolver(signInSchema)
+  })
+
+  const onSubmit = (data: SignInSchema) => {
+    mutate({
+      email: data.email,
+      password: data.password
+    })
   }
 
   return (
       <div className={cn("flex flex-col gap-6", className)} {...props}>
-        {data?.token}
         <Card>
+          {isSuccess}
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Welcome back</CardTitle>
             <CardDescription>
@@ -47,7 +70,7 @@ export function LoginForm({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit(onSubmit)}>
               <FieldGroup>
                 
                 <Field>
@@ -55,11 +78,10 @@ export function LoginForm({
                   <Input
                     id="email"
                     type="email"
-                    value={email}
                     placeholder="m@example.com"
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+                    {... register('email')}
                   />
+                  
                 </Field>
                 <Field>
                   <div className="flex items-center">
@@ -68,19 +90,13 @@ export function LoginForm({
                   <Input 
                     id="password" 
                     type="password" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required />
+                    {... register('password')}
+                  />
+                  
+
                 </Field>
                 <Field>
                   <Button disabled={isPending} variant={"metalsa"} type="submit">Continue <ArrowRight/> </Button>
-                  {
-                    error && (
-                      <p className="text-sm text-red-500">
-                        {(error as Error).message}
-                      </p>
-                    )
-                  }
                   <FieldDescription className="text-center">
                     Don&apos;t have an account? <Link to="/sign-up"> Sign up </Link>
                   </FieldDescription>

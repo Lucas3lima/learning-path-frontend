@@ -6,30 +6,33 @@ export type SignInInput = {
   password: string
 }
 
-type SignInResponse = {
-  token: string
+export type SignInResponse = {
   requiresPlantSelection?: boolean
   plants?: {
     id: string
     name: string
     role: string
-    }[]
+  }[]
 }
 
 type ApiErrorResponse = {
   message: string
 }
 
-
 export async function signIn(
   data: SignInInput,
-): Promise<SignInResponse> {
+): Promise<SignInResponse | void> {
   try {
-    return await api
-      .post('sessions/password', {
-        json: data,
-      })
-      .json<SignInResponse>()
+    const response = await api.post('sessions/password', {
+      json: data,
+    })
+
+    // Se tiver body, parseia
+    if (response.headers.get('content-length') !== '0') {
+      return await response.json<SignInResponse>()
+    }
+
+    return
   } catch (error) {
     if (error instanceof HTTPError) {
       const body =

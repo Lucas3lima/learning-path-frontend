@@ -14,41 +14,54 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { useSignUp } from "@/pages/_auth/-components/hooks/useSignUp"
+import { useGetPlants } from "@/hooks/auth/useGetPlants"
+import { useSignUp } from "@/hooks/auth/useSignUp"
+import { signUpSchema, type SignUpSchema } from '@/schemas/sign-up-schema'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Link } from "@tanstack/react-router"
-import { useState } from "react"
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select"
-import { useGetPlants } from "@/pages/_auth/-components/hooks/useGetPlants"
 import { ArrowRight } from "lucide-react"
+import { Controller, useForm } from 'react-hook-form'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select"
+import { useEffect } from 'react'
+import { toast } from "sonner"
+
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const { mutate, isPending, error } = useSignUp()
 
-  const { mutate, data, isPending, error } = useSignUp()
+  useEffect(() => {
+  if (error) {
+    toast.error((error as Error).message,{ position: "top-center" })
+  }
+}, [error])
+
 
   const {data: plants} = useGetPlants()
 
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [registrationNumber, setRegistrationNumber] = useState("")
-  const [plantId, setPlantId] = useState("")
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    control
+  } = useForm<SignUpSchema>({
+    resolver: zodResolver(signUpSchema)
+  })
 
-  function handleSubmit(e: React.FormEvent){
-    e.preventDefault()
-
+  const onSubmit = (data: SignUpSchema) => {
     mutate({
-      name,
-      email,
-      password,
-      registration_number: registrationNumber,
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      registration_number: data.registrationNumber,
       role: 'user',
-      plant_id: plantId
-    })
+      plant_id: data.plantId,
+  })
   }
+
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -59,29 +72,36 @@ export function SignupForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="name">Full Name</FieldLabel>
                 <Input 
                   id="name" 
                   type="text" 
-                  placeholder="John Doe" 
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required 
+                  placeholder="John Doe"
+                  {... register('name')}
                 />
+                {errors.name && (
+                  <p className="text-sm text-red-500">
+                    {errors.name.message}
+                  </p>
+                )}
+
               </Field>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  {... register('email')}
                   placeholder="m@example.com"
-                  required
                 />
+                {errors.email && (
+                  <p className="text-sm text-red-500">
+                    {errors.email.message}
+                  </p>
+                )}
               </Field>
               <Field>
                 <Field className="grid grid-cols-2 gap-4">
@@ -90,10 +110,13 @@ export function SignupForm({
                     <Input 
                       id="password" 
                       type="password" 
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required 
+                      {... register('password')}
                     />
+                    {errors.password && (
+                      <p className="text-sm text-red-500">
+                        {errors.password.message}
+                      </p>
+                    )}
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="confirm-password">
@@ -102,10 +125,13 @@ export function SignupForm({
                     <Input 
                       id="confirm-password" 
                       type="password" 
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required 
+                      {... register('confirmPassword')}
                     />
+                    {errors.confirmPassword && (
+                      <p className="text-sm text-red-500">
+                        {errors.confirmPassword.message}
+                      </p>
+                    )}
                   </Field>
                 </Field>
                 <FieldDescription>
@@ -119,44 +145,53 @@ export function SignupForm({
                   id="registration_number" 
                   type="text" 
                   placeholder="000" 
-                  value={registrationNumber}
-                  onChange={(e) => setRegistrationNumber(e.target.value)}
-                  required 
+                  {... register('registrationNumber')}
                 />
+                {errors.registrationNumber && (
+                  <p className="text-sm text-red-500">
+                    {errors.registrationNumber.message}
+                  </p>
+                )}
               </Field>
               <Field>
                 <FieldLabel htmlFor="plant">Plant</FieldLabel>
-                <Select value={plantId} onValueChange={setPlantId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a plant" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Plants</SelectLabel>
+                <Controller
+                  control={control}
+                  name="plantId"
+                  render={({ field }) => (
 
-                      {
-                        plants?.plants.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.name}
-                          </SelectItem>
-                        ))
-                      }
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a plant" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Plants</SelectLabel>
+
+                        {
+                          plants?.plants.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.name}
+                            </SelectItem>
+                          ))
+                        }
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+
+                  )}
+                >
+                </Controller>
+                {errors.plantId && (
+                  <p className="text-sm text-red-500">
+                    {errors.plantId.message}
+                  </p>
+                )}
               </Field>
                 <Button variant="metalsa" type="submit" disabled={isPending}>
                   {isPending ? 'Creating account...' : 'Create Account'}
                   {!isPending && <ArrowRight />}
                 </Button>
-
-                {
-                  error && (
-                    <p className="text-sm text-red-500">
-                      {(error as Error).message}
-                    </p>
-                  )
-                }
                 <FieldDescription className="text-center">
                   Already have an account? <Link to="/sign-in">Sign in</Link>
                 </FieldDescription>
