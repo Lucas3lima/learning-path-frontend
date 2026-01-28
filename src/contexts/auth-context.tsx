@@ -1,4 +1,6 @@
 import { getProfile } from '@/services/app/get-profile'
+import { logout } from '@/services/auth/logout'
+import { useNavigate } from '@tanstack/react-router'
 import { createContext, useEffect, useState } from 'react'
 
 
@@ -10,13 +12,14 @@ type User = {
   role: 'user' | 'manager'
   plantRole: 'student' | 'manager'
   plantId: string
+  plantName: string
 }
 
 type AuthContextType = {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
-  signOut: () => void
+  signOut: () => Promise<void>
 }
 
 export const AuthContext = createContext({} as AuthContextType)
@@ -24,6 +27,7 @@ export const AuthContext = createContext({} as AuthContextType)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const navigate = useNavigate()
 
   async function loadUser() {
     try {
@@ -36,9 +40,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  function signOut() {
-    setUser(null)
-    window.location.href = '/sign-in'
+  async function signOut() {
+    try {
+      await logout()
+    } catch (err) {
+      console.error('Erro ao deslogar:', err)
+    } finally {
+      setUser(null)
+      navigate({ to: '/sign-in', replace: true })
+    }
   }
 
   useEffect(() => {

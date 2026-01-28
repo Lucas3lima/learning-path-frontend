@@ -1,10 +1,9 @@
-import { getPlants } from "@/services/auth/get-plants"
-import { useQuery } from "@tanstack/react-query"
+import { getJourneys, type GetJourneysResponse } from '@/services/app/catalog/get-journeys'
+import { useQuery } from '@tanstack/react-query'
 
-
-export function useGetPlants() {
-  return useQuery({
-    queryKey: ['plants'],
-    queryFn: getPlants,
+export function useGetJourneys() {
+  return useQuery<GetJourneysResponse>({
+    queryKey: ['journeys'],
+    queryFn: getJourneys,
   })
 }

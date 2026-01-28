@@ -10,6 +10,7 @@ type GetProfileResponse = {
     role: 'user' | 'manager'
     plantRole: 'student' | 'manager'
     plantId: string
+    plantName: string
   }
 }
 
