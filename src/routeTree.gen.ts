@@ -14,6 +14,7 @@ import { Route as AppIndexRouteImport } from './pages/_app/index'
 import { Route as AuthSignUpRouteImport } from './pages/_auth/sign-up'
 import { Route as AuthSignInRouteImport } from './pages/_auth/sign-in'
 import { Route as AppCatalogIndexRouteImport } from './pages/_app/catalog/index'
+import { Route as AppJourneyIndexRouteImport } from './pages/_app/$journey/index'
 
 const AppLayoutRoute = AppLayoutRouteImport.update({
   id: '/_app',
@@ -39,17 +40,24 @@ const AppCatalogIndexRoute = AppCatalogIndexRouteImport.update({
   path: '/catalog/',
   getParentRoute: () => AppLayoutRoute,
 } as any)
+const AppJourneyIndexRoute = AppJourneyIndexRouteImport.update({
+  id: '/$journey/',
+  path: '/$journey/',
+  getParentRoute: () => AppLayoutRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/sign-in': typeof AuthSignInRoute
   '/sign-up': typeof AuthSignUpRoute
+  '/$journey/': typeof AppJourneyIndexRoute
   '/catalog/': typeof AppCatalogIndexRoute
 }
 export interface FileRoutesByTo {
   '/sign-in': typeof AuthSignInRoute
   '/sign-up': typeof AuthSignUpRoute
   '/': typeof AppIndexRoute
+  '/$journey': typeof AppJourneyIndexRoute
   '/catalog': typeof AppCatalogIndexRoute
 }
 export interface FileRoutesById {
@@ -58,19 +66,21 @@ export interface FileRoutesById {
   '/_auth/sign-in': typeof AuthSignInRoute
   '/_auth/sign-up': typeof AuthSignUpRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/$journey/': typeof AppJourneyIndexRoute
   '/_app/catalog/': typeof AppCatalogIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sign-in' | '/sign-up' | '/catalog/'
+  fullPaths: '/' | '/sign-in' | '/sign-up' | '/$journey/' | '/catalog/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/sign-in' | '/sign-up' | '/' | '/catalog'
+  to: '/sign-in' | '/sign-up' | '/' | '/$journey' | '/catalog'
   id:
     | '__root__'
     | '/_app'
     | '/_auth/sign-in'
     | '/_auth/sign-up'
     | '/_app/'
+    | '/_app/$journey/'
     | '/_app/catalog/'
   fileRoutesById: FileRoutesById
 }
@@ -117,16 +127,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCatalogIndexRouteImport
       parentRoute: typeof AppLayoutRoute
     }
+    '/_app/$journey/': {
+      id: '/_app/$journey/'
+      path: '/$journey'
+      fullPath: '/$journey/'
+      preLoaderRoute: typeof AppJourneyIndexRouteImport
+      parentRoute: typeof AppLayoutRoute
+    }
   }
 }
 
 interface AppLayoutRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
+  AppJourneyIndexRoute: typeof AppJourneyIndexRoute
   AppCatalogIndexRoute: typeof AppCatalogIndexRoute
 }
 
 const AppLayoutRouteChildren: AppLayoutRouteChildren = {
   AppIndexRoute: AppIndexRoute,
+  AppJourneyIndexRoute: AppJourneyIndexRoute,
   AppCatalogIndexRoute: AppCatalogIndexRoute,
 }
 
